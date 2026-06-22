@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chahid Warbah 7</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 0; padding-bottom: 90px; text-align: center; user-select: none; -webkit-user-select: none; }
+        .balance-container { background-color: #1e1e1e; border-bottom: 1px solid #333; padding: 20px 0; margin-bottom: 10px; }
+        .balance-title { font-size: 14px; color: #888888; text-transform: uppercase; letter-spacing: 1px; }
+        .balance-amount { font-size: 32px; font-weight: bold; color: #d4af37; margin: 5px 0; }
+        .balance-power { font-size: 12px; color: #aaaaaa; }
+        .section-title { font-size: 18px; color: #d4af37; margin: 20px 0 15px 0; font-weight: bold; }
+        .missions-container { padding: 0 15px; max-width: 450px; margin: 0 auto; }
+        .mission-row { background-color: #1e1e1e; border: 1px solid #333; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; padding: 15px; margin-bottom: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .mission-row.verify { border: 1px solid #ff9800; }
+        .mission-row.completed { opacity: 0.5; cursor: not-allowed; }
+        .mission-left { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+        .mission-reward { background-color: rgba(212, 175, 55, 0.15); color: #d4af37; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 13px; }
+        .tab-content { display: none; }
+        .tab-content.active-tab { display: block; }
+        .tap-circle { width: 180px; height: 180px; background: radial-gradient(circle, #f3cd44, #aa8214); border-radius: 50%; margin: 40px auto; display: flex; align-items: center; justify-content: center; font-size: 40px; cursor: pointer; box-shadow: 0 10px 25px rgba(212, 175, 55, 0.3); }
+        .tap-circle:active { transform: scale(0.90); }
+        .btn-upgrade { background-color: #d4af37; color: #121212; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background-color: #181818; border-top: 1px solid #292929; display: flex; justify-content: space-around; padding: 12px 0; z-index: 1000; }
+        .nav-item { color: #777777; font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; flex: 1; }
+        .nav-item.active { color: #d4af37; }
+        .nav-icon { font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div class="balance-container">
+        <div class="balance-title">Solde Actuel</div>
+        <div class="balance-amount"><span id="main-balance">0</span> DZ</div>
+        <div class="balance-power">Puissance : +<span id="click-power">1</span> DZ / Tap</div>
+    </div>
+    <div id="page-minage" class="tab-content">
+        <div class="section-title">Extraction de Pièces</div>
+        <div class="tap-circle" onclick="faireTap()">⛏️</div>
+    </div>
+    <div id="page-boutique" class="tab-content">
+        <div class="section-title">Boutique</div>
+        <div class="missions-container">
+            <button class="btn-upgrade" onclick="acheterBoost()">Acheter Boost (1 000 DZ)</button>
+        </div>
+    </div>
+    <div id="page-missions" class="tab-content active-tab">
+        <div class="section-title">Missions Quotidiennes</div>
+        <div class="missions-container">
+            <div class="mission-row" id="row-linkjust_1" onclick="gererMission('linkjust_1')">
+                <div class="mission-left"><span id="icon-linkjust_1">🔗</span> <span id="txt-linkjust_1">Lien Linkjust 1</span></div>
+                <div class="mission-reward">+300 DZ</div>
+            </div>
+            </div>
+    </div>
+    <div class="nav-bar">
+        <div class="nav-item" id="btn-nav-minage" onclick="naviguerVers('minage')">⚒️<span>Minage</span></div>
+        <div class="nav-item active" id="btn-nav-missions" onclick="naviguerVers('missions')">📋<span>Missions</span></div>
+    </div>
+
+    <script>
+        let USER_ID = "123456789";
+        // ... (Logique d'initialisation identique) ...
+        let etatsMissions = { linkjust_1: 'attente_clic', linkjust_2: 'attente_clic', exe_1: 'attente_clic', exe_2: 'attente_clic' };
+
+        function gererMission(type) {
+            const ligne = document.getElementById(`row-${type}`);
+            const icone = document.getElementById(`icon-${type}`);
+            const texte = document.getElementById(`txt-${type}`);
+
+            if (etatsMissions[type] === 'attente_clic') {
+                texte.innerText = "Chargement...";
+                fetch('/api/get_short_link', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ mission_type: type, user_id: USER_ID }) })
+                .then(res => res.json())
+                .then(data => {
+                    window.open(data.short_url || 'https://t.me/ChahidWarbah7', '_blank');
+                    etatsMissions[type] = 'attente_verification';
+                    ligne.classList.add('verify');
+                    icone.innerText = "⏳";
+                    texte.innerText = "Attends 10 secondes...";
+                    // Délai de 10 secondes avant de permettre la validation
+                    setTimeout(() => { texte.innerText = "Cliquer ici pour VÉRIFIER"; }, 10000);
+                });
+            } else if (etatsMissions[type] === 'attente_verification' && texte.innerText === "Cliquer ici pour VÉRIFIER") {
+                // ... (Appel complet_mission existant) ...
+            }
+        }
+    </script>
+</body>
+</html>
